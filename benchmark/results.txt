@@ -22,7 +22,7 @@ Pool: TRUE
 (1024, 100): 1,198,472.30 Kops/sec | 120.542 GB/s data | 150.682 GB/s wire
 (4096, 100): 1,202,047.40 Kops/sec | 120.905 GB/s data | 151.131 GB/s wire
 
-[SET] (singlelog)
+[SET] (singlelog) - 50% replica reads 
 (  64, 8):   363,126.90 Kops/sec |  5.401 GB/s data | 13.101 GB/s wire
 ( 256, 8):   508,029.40 Kops/sec |  7.580 GB/s data | 18.385 GB/s wire
 (1024, 8): 1,298,600.50 Kops/sec | 19.353 GB/s data | 47.216 GB/s wire
@@ -44,7 +44,7 @@ Pool: TRUE
 (1024, 100): 299,419.20 Kops/sec | 30.115 GB/s data | 39.042 GB/s wire
 (4096, 100): 340,710.20 Kops/sec | 34.274 GB/s data | 44.421 GB/s wire
 
-[SET] (mlogx8)
+[SET] (mlogx8) - 0% replica reads
 (  64, 8):   205,263.40 Kops/sec |  3.053 GB/s data |  8.803 GB/s wire
 ( 256, 8):   373,357.70 Kops/sec |  5.562 GB/s data | 15.988 GB/s wire
 (1024, 8):   642,475.00 Kops/sec |  9.572 GB/s data | 27.525 GB/s wire
@@ -70,7 +70,7 @@ Pool: FALSE
 (1024, 100): 2,016,449.40 Kops/sec | 202.830 GB/s data | 163.446 GB/s wire
 (4096, 100): 2,041,419.10 Kops/sec | 205.330 GB/s data | 166.572 GB/s wire
 
-[SET] (singlelog)
+[SET] (singlelog) - 50% replica reads
 (  64, 8): 1,075,695.80 Kops/sec | 16.023 GB/s data |  38.252 GB/s wire
 ( 256, 8): 1,426,677.50 Kops/sec | 21.270 GB/s data |  49.851 GB/s wire
 (1024, 8): 1,797,209.40 Kops/sec | 26.790 GB/s data |  62.483 GB/s wire
@@ -109,7 +109,7 @@ Pool: FALSE
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Cluster: 74 primaries + 74 replicas
-DbSize = ~1,000,000 (27028 x 37)
+DbSize = ~1,000,000 (13514 x 74)
 Instances  : 250 (1 x 250 hosts)
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Workers    : 16000 total (64 per instance x 250 instances)
@@ -126,7 +126,7 @@ Pool: TRUE
 (1024, 100): 203,769.40 Kops/sec | 20.507 GB/s data | 16.892 GB/s wire
 (4096, 100): 171,773.40 Kops/sec | 17.277 GB/s data | 17.203 GB/s wire
 
-[SET] (singlelog)
+[SET] (singlelog) - 50% replica reads
 (  64, 8): 63,764.40 Kops/sec |  0.942 GB/s data |  2.303 GB/s wire
 ( 256, 8): 70,135.50 Kops/sec |  1.055 GB/s data |  2.541 GB/s wire
 (1024, 8): 65,745.20 Kops/sec |  0.964 GB/s data |  2.453 GB/s wire
@@ -163,7 +163,7 @@ Pool: FALSE
 (1024, 100): 1,067,487.20 Kops/sec | 107.366 GB/s data | 81.282 GB/s wire
 (4096, 100): 1,209,536.40 Kops/sec | 121.666 GB/s data | 93.262 GB/s wire
 
-[SET] (singlelog)
+[SET] (singlelog) 50% replica reads
 (  64, 8): 228,006.90 Kops/sec |  3.403 GB/s data |  8.138 GB/s wire
 ( 256, 8): 465,309.70 Kops/sec |  6.949 GB/s data | 16.518 GB/s wire
 (1024, 8): 747,606.80 Kops/sec | 11.138 GB/s data | 26.431 GB/s wire
