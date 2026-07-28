@@ -1,0 +1,68 @@
+For the server, we allocated 74 VM instances each with 16 cores and 56 GB of memory, totaling 1184 cores and 4200 GB of total memory.
+Each system was configured in a way such as to perfectly utilize the total number of cores as follows:
+
+For Garnet, since it is designed to be natively multi-threaded we created 37 primary instances and 37 replicas.
+For Valkey, we configured it to utilize 74 primaries and 74 replicas, where each instance will use 2 cores for handling interrupts and 6 io-threads.
+Since Garnet can operate entirely out of memory and because we wanted to test Garnet's raw perf throughput, we configured Redis to operate out of a ramdisk with AOF enabled.
+
+
+{
+  "Address": "$eth1",
+  "Port": $port,
+  "EnableCluster": true,
+  "EnableStorageTier": false,
+  "IndexSize": "1g",
+  "LogMemorySize": "16g",
+  "GossipSamplePercent": 50,
+  "MetricsSamplingFrequency": 5,
+
+  /* AOF Config */
+  "EnableAOF": true,
+  "UseAofNullDevice": true,
+  "FastAofTruncate": true,
+  "CommitFrequencyMs": -1,
+  "AofMemorySize": "16g",
+  "AofPageSize": "128m",  
+}
+
+# Valkey/Redis - AOF on Ramdisk Cluster Configuration
+# Placeholders: $eth1 (resolved per-node), $port (resolved per-instance)
+# Requires: setup-ramdisk.sh to mount ramdisk before starting
+
+bind $eth1
+port $port
+protected-mode no
+daemonize yes
+logfile /home/guser/valkey-cluster/$port/valkey.log
+dir $ramdisk/valkey-cluster/$port
+
+# Cluster
+cluster-enabled yes
+cluster-config-file nodes-$port.conf
+cluster-node-timeout 5000
+cluster-announce-ip $eth1
+
+# Persistence (AOF on ramdisk)
+save ""
+appendonly yes
+appendfsync no
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb
+aof-timestamp-enabled no
+
+# Memory
+maxmemory-policy allkeys-lru
+
+# Performance
+io-threads 6
+io-threads-do-reads yes
+tcp-backlog 16384
+hz 100
+
+
+For the client, since they are lightweight, we allocated 250 VM instances of different SKUs, all of which had 4 cores and 8 to 32 GB of memory, totaling 1000 cores and 5144 GB of memory.
+The memory size for clients is not important since they are mostly light weight, but having a large number of client instances allows us to scale and parallelize the workload while
+saturating the server capacity
+
+The benchmark  was run for ~1,000,000 keys sharded equally across all instances for both systems. Each benchmark instance used 64 workers and maintained 2 connections per shard.
+In total the worker pool was 16000 workers, since we used 250 instances to run our experiments.
