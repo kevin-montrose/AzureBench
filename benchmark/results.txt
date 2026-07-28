@@ -9,7 +9,6 @@ DbSize = ~1,000,000 (27028 x 37)
 Instances  : 250 (1 x 250 hosts)
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Workers    : 16000 total (64 per instance x 250 instances)
-Connections: 32000 total (64 x 2 connections per instance x 250 instances)
 Pool: TRUE
 [GET]
 (  64, 8):   849,806.90 Kops/sec | 12.665 GB/s data |  32.449 GB/s wire
@@ -57,7 +56,6 @@ Pool: TRUE
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Workers    : 37000 total (148 (=4 threads x 37 shards) per instance x 250 instances)
-Connections: 64000 total (4 threads x 37 shards x 2 connections x 250 instances)
 Pool: FALSE
 [GET]
 (  64, 8): 2,018,391.50 Kops/sec |  30.077 GB/s data |  63.909 GB/s wire
@@ -113,7 +111,6 @@ DbSize = ~1,000,000 (13514 x 74)
 Instances  : 250 (1 x 250 hosts)
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Workers    : 16000 total (64 per instance x 250 instances)
-Connections: 32000 total (64 x 2 connections per instance x 250 instances)
 Pool: TRUE
 [GET]
 (  64, 8): 203,440.70 Kops/sec |  3.028 GB/s data |  6.460 GB/s wire
@@ -150,7 +147,6 @@ Pool: TRUE
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Workers    : 37000 total (148 (=2 threads x 74 shards) per instance x 250 instances)
-Connections: 64000 total (4 threads x 37 shards x 2 connections x 250 instances)
 Pool: FALSE
 [GET]
 (  64, 8):   429,358.80 Kops/sec |  6.403 GB/s data | 13.607 GB/s wire
