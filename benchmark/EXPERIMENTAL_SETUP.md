@@ -166,9 +166,9 @@ client fleet therefore provided 16,000 concurrent workers.
 | Connections per worker per shard | 2 |
 | Total logical keys | Approximately 1,000,000 |
 | Key length | 8 bytes |
-| Value length | 8 bytes |
-| Batch size | 4,096 |
-| Replica operations | 0% |
+| Value length (payload) | 8 or 100 bytes |
+| Batch size | 64, 256, 1,024, or 4,096 operations |
+| Replica operations | SET: 0%; GET: primary and replicas |
 
 Keys were sharded equally across the primary instances. The per-shard database  
 size was adjusted for each topology:
@@ -181,5 +181,21 @@ size was adjusted for each topology:
 Both products therefore operated on the same approximately one-million-key  
 logical dataset despite using different shard counts. The benchmark used a  
 connection pool for every worker; in this mode each worker maintained two  
-connections to every shard. Requests were directed to primaries only, with no  
-replica operations or broadcast mode enabled.
+connections to every shard. Broadcast mode was not enabled.
+
+### SET and GET Experiments
+
+Both the SET and GET workloads executed against a pre-loaded database. The
+workload was pre-generated using batch sizes of 64, 256, 1,024, and 4,096
+operations and payloads of 8 and 100 bytes. These variations measured the
+systems across different request-grouping and data-transfer demands. Batching
+emulated adaptive pipelining, in which multiple requests issued by different
+applications are grouped and sent efficiently over established connections.
+
+The SET experiments sent all write operations to primary shards. Replicas were
+not targeted because they are read-only and apply writes through replication
+from their corresponding primaries.
+
+The GET experiments targeted both primary shards and replicas. This allowed the
+read workload to use the full replicated cluster rather than limiting requests
+to primary shards.
