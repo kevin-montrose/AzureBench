@@ -82,6 +82,11 @@
       "mode": "755"
     },
     {
+      "src": "deploy/setup-nvme.sh",
+      "dst": "/opt/deploy-actions/setup-nvme.sh",
+      "mode": "755"
+    },
+    {
       "src": "benchmark/memtier-bench.sh",
       "dst": "/usr/local/bin/memtier-bench",
       "mode": "755"

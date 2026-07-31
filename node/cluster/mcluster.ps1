@@ -70,6 +70,7 @@ if (-not $IFACE) { $IFACE = "eth1" }
 if (-not $BASE_PORT) { $BASE_PORT = 7000 } else { $BASE_PORT = [int]$BASE_PORT }
 if (-not $DEPLOY_USER) { $DEPLOY_USER = "guser" }
 if (-not $RAMDISK_DIR) { $RAMDISK_DIR = "/mnt/ramdisk" }
+if (-not $NVME_DIR) { $NVME_DIR = "/mnt/nvme" }
 
 $ConfDir = "$HOME/AzureBench/node/system"
 $RepoDir = "$HOME/AzureBench"
@@ -130,6 +131,19 @@ function Resolve-Template {
         sudo chown "$($DEPLOY_USER):$($DEPLOY_USER)" $ramdiskDir
     }
 
+    # Check if template uses local NVMe and ensure directories exist.
+    # Requires setup-nvme.sh to have discovered + mounted the disk beforehand.
+    $usesNvme = $tmplContent -match '/mnt/nvme|\$nvme|NVME'
+    $nvmeDir = "$NVME_DIR/$($Sys)-cluster"
+
+    if ($usesNvme) {
+        if (-not (bash -c "mountpoint -q '$NVME_DIR' && echo ok") ) {
+            throw "ERROR: Template uses local NVMe ($NVME_DIR) but nothing is mounted there. Run 'sudo /opt/deploy-actions/setup-nvme.sh' first."
+        }
+        sudo mkdir -p $nvmeDir
+        sudo chown "$($DEPLOY_USER):$($DEPLOY_USER)" $nvmeDir
+    }
+
     for ($i = 0; $i -lt $Count; $i++) {
         $port = $BASE_PORT + $i
         $portDir = "$clusterDir/$port"
@@ -140,8 +154,14 @@ function Resolve-Template {
             New-Item -ItemType Directory -Path "$ramdiskDir/$port" -Force | Out-Null
         }
 
+        # Create NVMe port directory if template points there
+        if ($usesNvme) {
+            New-Item -ItemType Directory -Path "$nvmeDir/$port" -Force | Out-Null
+        }
+
         $content = $tmplContent
         $content = $content -replace '\$ramdisk', $RAMDISK_DIR
+        $content = $content -replace '\$nvme', $NVME_DIR
         $content = $content -replace '\$eth1', $eth1Ip
         $content = $content -replace '\$port', $port
 
@@ -224,6 +244,11 @@ function Clean-System {
             sudo rm -rf $ramdiskDir
             Write-Host "  Removed $ramdiskDir"
         }
+        $nvmeDir = "$NVME_DIR/garnet-cluster"
+        if (Test-Path $nvmeDir) {
+            sudo rm -rf $nvmeDir
+            Write-Host "  Removed $nvmeDir"
+        }
     }
     if ($Sys -eq "valkey" -or [string]::IsNullOrEmpty($Sys)) {
         $valkeyDir = "$HOME/valkey-cluster"
@@ -237,6 +262,11 @@ function Clean-System {
         if (Test-Path $ramdiskDir) {
             sudo rm -rf $ramdiskDir
             Write-Host "  Removed $ramdiskDir"
+        }
+        $nvmeDir = "$NVME_DIR/valkey-cluster"
+        if (Test-Path $nvmeDir) {
+            sudo rm -rf $nvmeDir
+            Write-Host "  Removed $nvmeDir"
         }
     }
 }
