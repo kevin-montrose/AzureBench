@@ -5,7 +5,7 @@
       "url": "https://github.com/microsoft/garnet.git",
       "path": "/home/guser/garnet",
       "branch": [
-        "vazois/mlog-max",
+        "vazois/mlog-updates",
         "vazois/cluster-bench"
       ]
     },
