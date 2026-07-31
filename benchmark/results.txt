@@ -43,6 +43,18 @@ Pool: TRUE
 (1024, 100): 299,419.20 Kops/sec | 30.115 GB/s data | 39.042 GB/s wire
 (4096, 100): 340,710.20 Kops/sec | 34.274 GB/s data | 44.421 GB/s wire
 
+
+[SET] (singlelog) - 0% replica reads - (32 Threads per instance)
+(  64, 8): 
+( 256, 8): 
+(1024, 8): 
+(4096, 8): 
+
+(  64, 100): 
+( 256, 100): 341,612.60 Kops/sec | 34.359 GB/s data | 44.538 GB/s wire
+(1024, 100): 284,985.90 Kops/sec | 28.662 GB/s data | 37.161 GB/s wire
+(4096, 100): 270,365.70 Kops/sec | 27.187 GB/s data | 35.257 GB/s wire
+
 [SET] (mlogx8) - 0% replica reads
 (  64, 8):   205,263.40 Kops/sec |  3.053 GB/s data |  8.803 GB/s wire
 ( 256, 8):   373,357.70 Kops/sec |  5.562 GB/s data | 15.988 GB/s wire
@@ -145,16 +157,16 @@ Pool: TRUE
 (1024, 100): 36,258.50 Kops/sec |  3.668 GB/s data |  4.721 GB/s wire
 (4096, 100): 39,928.20 Kops/sec |  4.018 GB/s data |  5.206 GB/s wire
 
-[SET] (singlelog) - 0% replica reads - no AOF
-(  64, 8): 
-( 256, 8):  18,100.30 Kops/sec |  0.270 GB/s data |  0.775 GB/s wire
-(1024, 8):  57,481.20 Kops/sec |  0.845 GB/s data |  2.458 GB/s wire
-(4096, 8): 100,687.80 Kops/sec |  1.521 GB/s data |  4.318 GB/s wire
+[SET] (singlelog) - 0% replica reads - no AOF (32 Threads per instance)
+(  64, 8):  61,273.70 Kops/sec |  0.913 GB/s data |  2.624 GB/s wire
+( 256, 8):  66,376.20 Kops/sec |  0.990 GB/s data |  2.851 GB/s wire
+(1024, 8):  68,333.40 Kops/sec |  1.015 GB/s data |  2.928 GB/s wire
+(4096, 8):  71,971.60 Kops/sec |  1.092 GB/s data |  3.084 GB/s wire
 
-(  64, 100): 
-( 256, 100): 
-(1024, 100): 
-(4096, 100): 
+(  64, 100): 50,000.40 Kops/sec |  5.031 GB/s data |  6.524 GB/s wire
+( 256, 100): 55,440.50 Kops/sec |  5.575 GB/s data |  7.225 GB/s wire
+(1024, 100): 48,796.40 Kops/sec |  4.900 GB/s data |  6.364 GB/s wire
+(4096, 100): 43,195.60 Kops/sec |  4.348 GB/s data |  5.633 GB/s wire
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Workers    : 37000 total (148 (=2 threads x 74 shards) per instance x 250 instances)
 Pool: FALSE
