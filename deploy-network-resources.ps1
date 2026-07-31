@@ -49,6 +49,7 @@ if ($Help) {
     Write-Host ""
     Write-Host "Parameters:"
     Write-Host "  -rg <name>              Resource group name (default: vazois-garnet)"
+    Write-Host "  -Region <name>          Azure region (default: resource group location)"
     Write-Host "  -Action <action>        Action to perform (default: deploy)"
     Write-Host "                          deploy - Deploy network resources and generate parameters"
     Write-Host "                          stage  - Query existing resources and generate parameters (no deployment)"
