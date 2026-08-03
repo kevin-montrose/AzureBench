@@ -43,18 +43,6 @@ Pool: TRUE
 (1024, 100): 299,419.20 Kops/sec | 30.115 GB/s data | 39.042 GB/s wire
 (4096, 100): 340,710.20 Kops/sec | 34.274 GB/s data | 44.421 GB/s wire
 
-
-[SET] (singlelog) - 0% replica reads - (32 Threads per instance)
-(  64, 8): 
-( 256, 8): 
-(1024, 8): 
-(4096, 8): 
-
-(  64, 100): 
-( 256, 100): 341,612.60 Kops/sec | 34.359 GB/s data | 44.538 GB/s wire
-(1024, 100): 284,985.90 Kops/sec | 28.662 GB/s data | 37.161 GB/s wire
-(4096, 100): 270,365.70 Kops/sec | 27.187 GB/s data | 35.257 GB/s wire
-
 [SET] (mlogx8) - 0% replica reads
 (  64, 8):   205,263.40 Kops/sec |  3.053 GB/s data |  8.803 GB/s wire
 ( 256, 8):   373,357.70 Kops/sec |  5.562 GB/s data | 15.988 GB/s wire

@@ -4,6 +4,10 @@ write_files:
     permissions: '0644'
     content: |
       alias ll='ls -la'
+  - path: /etc/profile.d/dotnet-tools.sh
+    permissions: '0644'
+    content: |
+      export PATH="$PATH:$HOME/.dotnet/tools"
   - path: /opt/deploy-actions/keyvault.env
     permissions: '0644'
     content: |
@@ -18,3 +22,6 @@ runcmd:
   # Clone AzureBench repo, install scripts, and execute deploy commands from manifest
   - sudo -u guser git clone https://github.com/vazois/AzureBench.git /home/guser/AzureBench
   - sudo pwsh /home/guser/AzureBench/node/update.ps1 -Run
+
+  # Install dotnet-stack global tool for guser (PATH persisted via /etc/profile.d/dotnet-tools.sh)
+  - sudo -u guser dotnet tool install --global dotnet-stack
