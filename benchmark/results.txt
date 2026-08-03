@@ -145,16 +145,16 @@ Pool: TRUE
 (1024, 100): 36,258.50 Kops/sec |  3.668 GB/s data |  4.721 GB/s wire
 (4096, 100): 39,928.20 Kops/sec |  4.018 GB/s data |  5.206 GB/s wire
 
-[SET] (singlelog) - 0% replica reads - no AOF (32 Threads per instance)
-(  64, 8):  61,273.70 Kops/sec |  0.913 GB/s data |  2.624 GB/s wire
-( 256, 8):  66,376.20 Kops/sec |  0.990 GB/s data |  2.851 GB/s wire
-(1024, 8):  68,333.40 Kops/sec |  1.015 GB/s data |  2.928 GB/s wire
-(4096, 8):  71,971.60 Kops/sec |  1.092 GB/s data |  3.084 GB/s wire
+[SET] (singlelog) - 0% replica reads - no AOF
+(  64, 8):   51,597.70 Kops/sec |  0.753 GB/s data |  2.209 GB/s wire
+( 256, 8):  105,873.50 Kops/sec |  1.576 GB/s data |  4.538 GB/s wire
+(1024, 8):   96,126.70 Kops/sec |  1.425 GB/s data |  4.119 GB/s wire
+(4096, 8):   94,725.10 Kops/sec |  1.427 GB/s data |  4.056 GB/s wire
 
-(  64, 100): 50,000.40 Kops/sec |  5.031 GB/s data |  6.524 GB/s wire
-( 256, 100): 55,440.50 Kops/sec |  5.575 GB/s data |  7.225 GB/s wire
-(1024, 100): 48,796.40 Kops/sec |  4.900 GB/s data |  6.364 GB/s wire
-(4096, 100): 43,195.60 Kops/sec |  4.348 GB/s data |  5.633 GB/s wire
+(  64, 100): 90,986.30 Kops/sec |  9.149 GB/s data | 11.857 GB/s wire
+( 256, 100): 65,002.90 Kops/sec |  6.538 GB/s data |  8.475 GB/s wire
+(1024, 100): 67,399.20 Kops/sec |  6.779 GB/s data |  8.782 GB/s wire
+(4096, 100): 60,347.70 Kops/sec |  6.073 GB/s data |  7.871 GB/s wire
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Workers    : 37000 total (148 (=2 threads x 74 shards) per instance x 250 instances)
 Pool: FALSE

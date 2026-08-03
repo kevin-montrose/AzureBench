@@ -164,6 +164,8 @@ iptables -C INPUT -p tcp --dport 22 -s $SUBNET -j ACCEPT 2>/dev/null || \
 # -------------------------------------------------------------
 sysctl -w net.core.wmem_max=67108864
 sysctl -w net.core.netdev_max_backlog=250000
+sysctl -w net.core.somaxconn=262144
+sysctl -w net.ipv4.tcp_max_syn_backlog=262144
 sysctl -w net.ipv4.tcp_rmem="4096 87380 33554432"
 sysctl -w net.ipv4.tcp_wmem="4096 87380 33554432"
 
