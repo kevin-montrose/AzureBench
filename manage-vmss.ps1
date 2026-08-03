@@ -38,6 +38,11 @@
 .PARAMETER NoPull
     Skip the git pull step on rebuild and build only the current local changes.
 
+.PARAMETER Ref
+    Rebuild from a specific commit hash, tag, or branch. Fetches all refs then
+    hard-resets the system repo onto <Ref> before building. Only valid with
+    -Action rebuild; takes precedence over -Force/-NoPull pull behavior.
+
 .EXAMPLE
     # List VMSS and prompt for selection, then refresh all repos
     .\manage-vmss.ps1 -rg vazois-garnet
@@ -76,6 +81,8 @@ param(
 
     [string]$SshUser = 'guser',
 
+    [string]$Ref,
+
     [switch]$Force,
 
     [switch]$NoPull,
@@ -108,6 +115,8 @@ if ($Help -or -not $rg) {
     Write-Host "  -System <name>      System to rebuild: garnet, valkey, resp-bench, memtier"
     Write-Host "                      Required when -Action rebuild"
     Write-Host "  -MaxScan <n>        Cap subnet-scan probes for -Action discover (0 = unlimited)"
+    Write-Host "  -Ref <commit>       Rebuild from a specific commit/tag/branch (fetch + git reset --hard)"
+    Write-Host "                      Only valid with -Action rebuild; overrides -Force/-NoPull pull behavior"
     Write-Host "  -SshUser <user>     SSH username (default: guser)"
     Write-Host "  -Verbose            Show per-instance command output"
     Write-Host "  -Force              Force pull (git reset --hard) instead of fast-forward"
@@ -122,6 +131,7 @@ if ($Help -or -not $rg) {
     Write-Host "  .\manage-vmss.ps1 -rg vazois-garnet -VmssName server -Action stop"
     Write-Host "  .\manage-vmss.ps1 -rg vazois-garnet -VmssName server -Action restart"
     Write-Host "  .\manage-vmss.ps1 -rg vazois-garnet -VmssName server -Action ping"
+    Write-Host "  .\manage-vmss.ps1 -rg vazois-garnet -VmssName server -Action rebuild -System garnet -Ref a1b2c3d"
     Write-Host ""
     Write-Host "For detailed help: Get-Help .\manage-vmss.ps1 -Detailed"
     Write-Host ""
@@ -173,6 +183,11 @@ function Get-VmssPowerStates {
 # Validate Action and System parameter combination
 if ($Action -eq 'rebuild' -and -not $System) {
     Write-Error "Action 'rebuild' requires -System parameter (garnet, valkey, resp-bench, or memtier)"
+    exit 1
+}
+
+if ($Ref -and $Action -ne 'rebuild') {
+    Write-Error "-Ref is only supported with -Action rebuild"
     exit 1
 }
 
@@ -649,7 +664,12 @@ Write-Host "Using SSH key: $sshKey" -ForegroundColor DarkGray
 # --- Build SSH Command based on Action ---
 # Git pull strategy: fast-forward only or force reset
 # $branch param is optional; when provided, force uses that explicit branch instead of detecting HEAD
-function Get-GitPull([string]$branch = '') {
+function Get-GitPull([string]$branch = '', [string]$ref = '') {
+    if ($ref) {
+        # Explicit commit/tag/branch: fetch everything then hard-reset onto it.
+        $fetch = "for i in 1 2 3; do git fetch --all && break || sleep 2; done"
+        return "$fetch && git reset --hard $ref"
+    }
     if ($Force) {
         $target = if ($branch) { "origin/$branch" } else { 'origin/$(git rev-parse --abbrev-ref HEAD)' }
         $fetch = "for i in 1 2 3; do git fetch --all && break || sleep 2; done"
@@ -730,18 +750,25 @@ function Get-SshCommand {
                 $buildBranch = $branchField
             }
 
-            # Append branch to build args (skipped for -NoPull so build.sh does not
-            # fetch/checkout/reset --hard, which would discard local changes)
-            if (-not $NoPull -and $buildArgs -match '^\s*\S+\s*$') {
+            # Append branch to build args (skipped for -NoPull/-Ref so build.sh does
+            # not fetch/checkout/reset --hard, which would discard local changes or
+            # override the explicit ref we just checked out)
+            if (-not $NoPull -and -not $Ref -and $buildArgs -match '^\s*\S+\s*$') {
                 $buildArgs = "$($buildArgs.Trim()) $buildBranch"
             }
 
             $repoPath = $repoEntry.path
+            $dnsWarmup = "nslookup github.com >/dev/null 2>&1 || sleep 3"
+            if ($Ref) {
+                # Fetch + hard-reset to an explicit commit/tag/branch, then build the
+                # checked-out tree (build.sh gets no branch arg so it won't re-checkout).
+                $pull = Get-GitPull -ref $Ref
+                return "$dnsWarmup; cd $repoPath && echo '[git checkout $Ref]' && $pull && echo '[build]' && sudo /opt/deploy-actions/build.sh $buildArgs"
+            }
             if ($NoPull) {
                 return "cd $repoPath && echo '[build (no pull)]' && sudo /opt/deploy-actions/build.sh $buildArgs"
             }
             $pull = Get-GitPull -branch $buildBranch
-            $dnsWarmup = "nslookup github.com >/dev/null 2>&1 || sleep 3"
             return "$dnsWarmup; cd $repoPath && echo '[git pull]' && $pull && echo '[build]' && sudo /opt/deploy-actions/build.sh $buildArgs"
         }
 
