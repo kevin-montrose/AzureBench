@@ -170,6 +170,23 @@ Start or stop the storage cluster on server VMs. Reads connection info from `ben
 
 The `start` action automatically starts instances and forms the cluster in one step. Use `-Clean` to wipe data directories before starting.
 
+> **🔑 SSH key resolution:** `cluster.ps1` (like `manage-vmss.ps1`) SSHs from your **local machine into the VMs** using your personal keys. It resolves the private key from `security/manifest.json` — expanding `basePath` and picking the first existing entry in `userKeys` — falling back to `~/.ssh/id_ed25519` if none is found. Pass `-SshKey <path>` to override. Note that the `vmKeys` entry / Key Vault key is **not** used here; that key is only for **VM-to-VM** (intra-cluster) SSH. `security/manifest.json` is authored/edited by you (see [§3](#3-configure-ssh-keys-and-key-vault)) and further maintained by `deploy-keys.ps1`, which writes additional fields back to it (e.g., `keyVaultName`).
+
+> **⚠️ Azure VPN required:** These commands run locally and SSH into the remote server VMs by their public Azure hostnames. You must be connected to the **Azure VPN** for the local machine to reach and SSH into the remote machines. Without the VPN connection the cluster commands will fail to establish SSH sessions. Example invocations:
+>
+> ```powershell
+> pwsh .\cluster.ps1 --serverhost vm1.d128ldsv6server.canadaeast.cloudapp.azure.com --clean --icount 1 --system garnet --action start --conf .\node\system\garnet-aofx16m.conf --replicas 1 --createmanual
+> pwsh .\cluster.ps1 --serverhost vm1.d128ldsv6server.canadaeast.cloudapp.azure.com --clean --icount 1 --system garnet --action stop --conf .\node\system\garnet-aofx16m.conf --replicas 1 --createmanual
+> ```
+
+#### Managing VMSS Status
+
+Use `manage-vmss.ps1` to manage the power status of the VMSS (start, stop, restart, and more). Run the script's help to see the full list of allowed operations:
+
+```powershell
+pwsh .\manage-vmss.ps1 --help
+```
+
 ### 6. Run Benchmarks
 
 The `benchmark/` folder contains the benchmark launcher and its configuration:
