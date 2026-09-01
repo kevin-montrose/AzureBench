@@ -73,7 +73,7 @@ $ErrorActionPreference = "Stop"
 
 # --- Helper Functions ---
 
-function InvokeSsh {
+function Invoke-Ssh {
     param([string]$Ip, [string]$SshUser, [string]$Command, [int]$Timeout = 10, [switch]$Background)
     $sshArgs = @("-o", "ConnectTimeout=$Timeout", "-o", "StrictHostKeyChecking=no", "-o", "BatchMode=yes")
     if ($Background) {
@@ -83,13 +83,26 @@ function InvokeSsh {
     }
 }
 
-function Get-OwnEth1Info {
-    $output = ip -4 addr show eth1 2>$null
+function Get-EthInterfaces {
+    $output = ip -4 addr show 2>$null
+    $lines = $output | Where-Object { $_ -match 'inet\s+([\d.]+)/([\d]+).*?(eth\d+)' }
+    $ret = @()
+    foreach($line in $lines) {
+        if($line -match 'inet\s+([\d.]+)/([\d]+).*?(eth\d+)') {
+            $ret += [string]$Matches[3]
+        }
+    }
+    return $ret
+}
+
+function Get-OwnEthInfo {
+    param([string]$Eth)
+    $output = ip -4 addr show $Eth 2>$null
     $inetLine = $output | Where-Object { $_ -match 'inet\s+([\d.]+)/([\d]+)' } | Select-Object -First 1
     if ($inetLine -match 'inet\s+([\d.]+)/([\d]+)') {
         return @{ Ip = $Matches[1]; Prefix = [int]$Matches[2] }
     }
-    throw "ERROR: Could not detect eth1 IP/subnet."
+    throw "ERROR: Could not detect $Eth IP/subnet."
 }
 
 function Get-SubnetIps {
@@ -232,7 +245,7 @@ function Find-Peers {
     }
 
     Write-Host "  Azure API unavailable; falling back to subnet scan." -ForegroundColor DarkYellow
-    Write-Host "Discovering peers on eth1 subnet ($OwnIp/$Prefix)..." -ForegroundColor Yellow
+    Write-Host "Discovering peers on eth subnet ($OwnIp/$Prefix)..." -ForegroundColor Yellow
 
     # Get local VMSS prefix to filter out VMs from other scale sets
     $localHostname = hostname
@@ -266,7 +279,7 @@ function Find-Peers {
 
                 # Filter by VMSS family if we know our prefix
                 if ($localVmssPrefix) {
-                    $raw = InvokeSsh -Ip $ip -SshUser $SshUser -Command "hostname" -Timeout $Timeout
+                    $raw = Invoke-Ssh  -Ip $ip -SshUser $SshUser -Command "hostname" -Timeout $Timeout
                     $peerHostname = ($raw | Where-Object { $_ -is [string] } | Select-Object -Last 1)
                     if ($peerHostname -and $peerHostname -match "^${localVmssPrefix}[0-9A-Z]{6}$") {
                         $peers += $ip
@@ -366,7 +379,7 @@ function Test-SshConnectivity {
     Write-Host "Validating SSH connectivity to $($Ips.Count) VMs..." -ForegroundColor Yellow
     $failed = @()
     foreach ($ip in $Ips) {
-        $raw = InvokeSsh -Ip $ip -SshUser $SshUser -Command "echo ok" -Timeout $Timeout
+        $raw = Invoke-Ssh -Ip $ip -SshUser $SshUser -Command "echo ok" -Timeout $Timeout
         $result = ($raw | Where-Object { $_ -is [string] } | Select-Object -Last 1)
         if ($result -ne "ok") {
             $failed += $ip
@@ -394,7 +407,7 @@ function Test-VmssFamily {
     Write-Host "Validating VMSS family membership..." -ForegroundColor Yellow
     $hostnames = @()
     foreach ($ip in $Ips) {
-        $raw = InvokeSsh -Ip $ip -SshUser $SshUser -Command "hostname" -Timeout $Timeout
+        $raw = Invoke-Ssh -Ip $ip -SshUser $SshUser -Command "hostname" -Timeout $Timeout
         # Filter out stderr (ErrorRecords) and take the last stdout line
         $hostname = ($raw | Where-Object { $_ -is [string] } | Select-Object -Last 1)
         if (-not $hostname) {
@@ -466,7 +479,7 @@ function Confirm-Endpoints {
         Write-Host "Fetching logs from failed VMs..." -ForegroundColor Yellow
         foreach ($ip in $failures) {
             Write-Host "  --- [$ip] $RemoteLog ---" -ForegroundColor Red
-            $log = InvokeSsh -Ip $ip -SshUser $SshUser -Command "cat $RemoteLog 2>/dev/null" -Timeout 5
+            $log = Invoke-Ssh -Ip $ip -SshUser $SshUser -Command "cat $RemoteLog 2>/dev/null" -Timeout 5
             $log | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
         }
         Write-Host ""
@@ -493,7 +506,7 @@ function Invoke-ParallelMcluster {
             Write-Host " dispatched" -ForegroundColor Green
         } else {
             Write-Host "  [$ip] (ssh) ..." -NoNewline
-            InvokeSsh -Ip $ip -SshUser $SshUser -Command "~/AzureBench/node/cluster/mcluster.ps1 $MclusterArgs" -Background | Out-Null
+            Invoke-Ssh -Ip $ip -SshUser $SshUser -Command "~/AzureBench/node/cluster/mcluster.ps1 $MclusterArgs" -Background | Out-Null
             Write-Host " dispatched" -ForegroundColor Green
         }
     }
@@ -741,10 +754,23 @@ function Resolve-Peers {
 
     # Discovery mode if no cache
     if (-not $peers) {
-        $eth1 = Get-OwnEth1Info
-        $peers = Find-Peers -OwnIp $eth1.Ip -Prefix $eth1.Prefix -SshUser $User -Timeout $SshTimeout -MaxScan $MaxScan
-        Save-PeerCache -Ips $peers -OwnIp $eth1.Ip
-        Test-VmssFamily -Ips $peers -SshUser $User -Timeout $SshTimeout
+        foreach($eth in Get-EthInterfaces)
+        {
+            Write-Host "Considering $eth" -ForegroundColor Yellow
+            $ethInfo = Get-OwnEthInfo $eth
+            $peers = Find-Peers -OwnIp $ethInfo.Ip -Prefix $ethInfo.Prefix -SshUser $User -Timeout $SshTimeout -MaxScan $MaxScan
+            if($peers -And $peers.Count -gt 1)
+            {
+                Save-PeerCache -Ips $peers -OwnIp $ethInfo.Ip
+                Test-VmssFamily -Ips $peers -SshUser $User -Timeout $SshTimeout
+
+                break;
+            }
+        }
+
+        if(-not ($peers -And $peers.Count -gt 1)) {
+            throw "ERROR: Could not discover peers on any ethernet interface."
+        }
     }
 
     # Slice to first N if NodeCount specified

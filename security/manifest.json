@@ -1,9 +1,9 @@
-﻿{
-    "basePath":  "E:\\AzureBench",
-    "userKeys":  [
-                     "id_ed25519_desktop",
-                     "id_ed25519_notebook"
-                 ],
-    "vmKeys":  "id_ed25519_vmss",
-    "keyVaultName":  "kv-20260831130749"
+{
+  "basePath": "E:\\AzureBench",
+  "userKeys": [
+    "id_ed25519_desktop",
+    "id_ed25519_notebook"
+  ],
+  "vmKeys": "id_ed25519_vmss",
+  "keyVaultName": "kv-20260831130749"
 }
