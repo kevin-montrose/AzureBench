@@ -133,12 +133,29 @@ function Deploy-Vault {
     }
 
     # Check if chosen vault already exists
-    $kvExists = az keyvault show --name $kvName --resource-group $rg --query name -o tsv 2>$null
+    $kvExists=$false
+    try
+    {
+        $kvExists = az keyvault show --name $kvName --resource-group $rg --query name -o tsv 2>$null
+    }
+    catch
+    {
+    }
+    
     if ($kvExists) {
         Write-Host "  Key Vault '$kvName' already exists."
     } else {
         # Check for soft-deleted vault with the same name
-        $softDeleted = az keyvault show-deleted --name $kvName --query name -o tsv 2>$null
+        $softDeleted=$false
+
+        try
+        {
+            $softDeleted = az keyvault show-deleted --name $kvName --resource-group $rg --query name -o tsv 2>$null
+        }
+        catch
+        {
+        }
+        
         if ($softDeleted) {
             Write-Host "  Found soft-deleted vault '$kvName'. Purging..." -ForegroundColor Yellow
             az keyvault purge --name $kvName --output none 2>$null

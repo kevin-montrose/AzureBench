@@ -5,7 +5,7 @@ winget install --id Git.Git --silent --accept-package-agreements --accept-source
 $dotnetInstallScript = "$env:TEMP\dotnet-install.ps1"
 Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -OutFile $dotnetInstallScript
 
-$channels = @("8.0", "9.0", "10.0")
+$channels = @("8.0", "10.0")
 foreach ($channel in $channels) {
     Write-Host "Installing .NET SDK channel $channel (latest)"
     & $dotnetInstallScript -Channel $channel -InstallDir 'C:\Program Files\dotnet'

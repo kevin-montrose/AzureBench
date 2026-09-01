@@ -173,7 +173,7 @@ Write-Host ""
 # --- Execute ---
 $doStart = {
     # Step 1: Start instances
-    $startCmd = "cluster-deploy.ps1 -Action start -System $System -ICount $ICount"
+    $startCmd = "~/AzureBench/node/cluster/cluster-deploy.ps1 -Action start -System $System -ICount $ICount"
     if ($NodeCount -gt 0) { $startCmd += " -NodeCount $NodeCount" }
     if ($MaxScan -gt 0) { $startCmd += " -MaxScan $MaxScan" }
     if ($Template) { $startCmd += " -Template $Template" }
@@ -184,7 +184,7 @@ $doStart = {
 
     # Step 2: Form cluster (skip if NoCluster)
     if (-not $NoCluster) {
-        $setupCmd = "cluster-deploy.ps1 -Action setup -System $System -ICount $ICount"
+        $setupCmd = "~/AzureBench/node/cluster/cluster-deploy.ps1 -Action setup -System $System -ICount $ICount"
         if ($NodeCount -gt 0) { $setupCmd += " -NodeCount $NodeCount" }
         if ($MaxScan -gt 0) { $setupCmd += " -MaxScan $MaxScan" }
         if ($Replicas -gt 0) { $setupCmd += " -Replicas $Replicas" }
@@ -194,7 +194,7 @@ $doStart = {
 }
 
 $doStop = {
-    $stopCmd = "cluster-deploy.ps1 -Action stop -System $System -ICount $ICount"
+    $stopCmd = "~/AzureBench/node/cluster/cluster-deploy.ps1 -Action stop -System $System -ICount $ICount"
     if ($NodeCount -gt 0) { $stopCmd += " -NodeCount $NodeCount" }
     if ($MaxScan -gt 0) { $stopCmd += " -MaxScan $MaxScan" }
     Invoke-Remote -Cmd $stopCmd -Label "stop"

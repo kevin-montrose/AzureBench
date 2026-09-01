@@ -122,14 +122,14 @@ function Get-PeersFromAzure {
     param([string]$OwnIp)
     try {
         $metaUri = "http://169.254.169.254/metadata/instance?api-version=2021-02-01"
-        $meta = Invoke-RestMethod -Uri $metaUri -Headers @{ Metadata = "true" } -TimeoutSec 5
+        $meta = Invoke-RestMethod -Uri $metaUri -Headers @{ Metadata = "true" } -TimeoutSec 5 -NoProxy
         $subscriptionId = $meta.compute.subscriptionId
         $resourceGroup  = $meta.compute.resourceGroupName
         $vmssName       = $meta.compute.vmScaleSetName
         if (-not $vmssName) { return $null }
 
         $tokenUri = "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/"
-        $tokenResp = Invoke-RestMethod -Uri $tokenUri -Headers @{ Metadata = "true" } -TimeoutSec 5
+        $tokenResp = Invoke-RestMethod -Uri $tokenUri -Headers @{ Metadata = "true" } -TimeoutSec 5 -NoProxy
         $headers = @{ Authorization = "Bearer $($tokenResp.access_token)"; "Content-Type" = "application/json" }
 
         # VMSS-level NIC list, following nextLink paging.
@@ -169,14 +169,14 @@ function Get-IpFqdnMap {
     $map = @{}
     try {
         $metaUri = "http://169.254.169.254/metadata/instance?api-version=2021-02-01"
-        $meta = Invoke-RestMethod -Uri $metaUri -Headers @{ Metadata = "true" } -TimeoutSec 5
+        $meta = Invoke-RestMethod -Uri $metaUri -Headers @{ Metadata = "true" } -TimeoutSec 5 -NoProxy
         $subscriptionId = $meta.compute.subscriptionId
         $resourceGroup  = $meta.compute.resourceGroupName
         $vmssName       = $meta.compute.vmScaleSetName
         if (-not $vmssName) { return $map }
 
         $tokenUri = "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/"
-        $tokenResp = Invoke-RestMethod -Uri $tokenUri -Headers @{ Metadata = "true" } -TimeoutSec 5
+        $tokenResp = Invoke-RestMethod -Uri $tokenUri -Headers @{ Metadata = "true" } -TimeoutSec 5 -NoProxy
         $headers = @{ Authorization = "******"; "Content-Type" = "application/json" }
 
         $base = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$resourceGroup/providers/Microsoft.Compute/virtualMachineScaleSets/$vmssName"
@@ -489,11 +489,11 @@ function Invoke-ParallelMcluster {
     foreach ($ip in $Ips) {
         if ($ip -eq $OwnIp) {
             Write-Host "  [$ip] (local) ..." -NoNewline
-            Invoke-Expression "mcluster.ps1 $MclusterArgs" 2>&1 | Out-Null
+            Invoke-Expression "~/AzureBench/node/cluster/mcluster.ps1 $MclusterArgs" 2>&1 | Out-Null
             Write-Host " dispatched" -ForegroundColor Green
         } else {
             Write-Host "  [$ip] (ssh) ..." -NoNewline
-            InvokeSsh -Ip $ip -SshUser $SshUser -Command "mcluster.ps1 $MclusterArgs" -Background | Out-Null
+            InvokeSsh -Ip $ip -SshUser $SshUser -Command "~/AzureBench/node/cluster/mcluster.ps1 $MclusterArgs" -Background | Out-Null
             Write-Host " dispatched" -ForegroundColor Green
         }
     }

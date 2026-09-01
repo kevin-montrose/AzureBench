@@ -267,7 +267,10 @@ var cloudInitAzureLinux = base64(cloudInitAzureLinuxFinal)
 var cloudInitData = isAzureLinux ? cloudInitAzureLinux : cloudInitUbuntu
 
 param sshPublicKeys array
-var installSoftwareScriptBase64 = base64(loadTextContent('install-software.ps1'))
+var installSoftwareScriptBase64Windows = base64(loadTextContent('install-software.ps1'))
+var installSoftwareScriptBase64Linux = base64(loadTextContent('install-software.sh'))
+var installSoftwareScriptBase64 = isAzureLinux ? installSoftwareScriptBase64Linux : installSoftwareScriptBase64Windows
+
 ////////////////////////////////////////////////////////
 
 ////////////////////// NETWORK CONFIG OPTIONS //////////////////////////
@@ -430,6 +433,18 @@ resource linuxVmss 'Microsoft.Compute/virtualMachineScaleSets@2024-03-01' = if (
                 port: 22
                 intervalInSeconds: 5
                 numberOfProbes: 1
+              }
+            }
+          }
+          {
+            name: 'InstallTools'
+            properties: {
+              publisher: 'Microsoft.Azure.Extensions'
+              type: 'CustomScript'
+              typeHandlerVersion: '2.1'
+              autoUpgradeMinorVersion: true
+              protectedSettings: {
+                script: installSoftwareScriptBase64
               }
             }
           }

@@ -1,5 +1,6 @@
 @allowed([
   'westus3'
+  'westus2'
   'eastus'
   'southcentralus'
   'centralus'
