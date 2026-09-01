@@ -20,7 +20,7 @@ runcmd:
   - sudo tdnf install -y tcpdump pciutils jq iperf3 ethtool powershell
 
   # Clone AzureBench repo, install scripts, and execute deploy commands from manifest
-  - sudo -u guser git clone https://github.com/vazois/AzureBench.git /home/guser/AzureBench
+  - sudo -u guser git clone https://github.com/kevin-montrose/AzureBench --branch users/kmontrose/linuxTweaks /home/guser/AzureBench
   - sudo pwsh /home/guser/AzureBench/node/update.ps1 -Run
 
   # Install dotnet-stack global tool for guser (PATH persisted via /etc/profile.d/dotnet-tools.sh)

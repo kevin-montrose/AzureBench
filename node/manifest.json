@@ -35,9 +35,9 @@
     },
     {
       "name": "AzureBench",
-      "url": "https://github.com/vazois/AzureBench.git",
+      "url": "https://github.com/kevin-montrose/AzureBench.git",
       "path": "/home/guser/AzureBench",
-      "branch": "main"
+      "branch": "users/kmontrose/linuxTweaks"
     }
   ],
   "scripts": [
