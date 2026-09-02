@@ -11,6 +11,7 @@
     vault            - Only deploys Key Vault and uploads VMSS private key
     sync             - Discovers existing Key Vault in the resource group and updates vmss-parameters.json + manifest.json
     update           - Pushes keys to running VMSS nodes via az vmss run-command
+    ssh              - Add SSH keys to VMSS nodes
 
 .PARAMETER rg
     Azure resource group name.
@@ -39,7 +40,7 @@
 #>
 
 param(
-    [ValidateSet('deploy', 'vault', 'sync', 'update')]
+    [ValidateSet('deploy', 'vault', 'sync', 'update', 'ssh')]
     [string]$Action = 'deploy',
 
     [Alias('ResourceGroup')]
@@ -237,6 +238,90 @@ function Deploy-Vault {
     }
 }
 
+function Set-NodeSSHKey {
+    Write-Host "=== Setting SSH keys on nodes: $VmssName ===" -ForegroundColor Cyan
+
+    # Find SSH keys to copy over
+    $vmPubKeys = @()
+    $vmPrivKeys = @()
+    foreach ($key in $manifest.vmKeys) {
+        $pubFile = Join-Path $securityDir "$key.pub"
+        if (-not (Test-Path $pubFile)) {
+            $pubFile = Join-Path $basePath "$key.pub"
+            if (Test-Path $pubFile) {
+                $vmPubKeys += $pubFile
+            } else {
+                Write-Error "Could not find public key $key.pub"
+                exit 1
+            }
+        } else {
+            $vmPubKeys += $pubFile
+        }
+
+        $privFile = Join-Path $securityDir "$key"
+        if (-not (Test-Path $privFile)) {
+            $privFile = Join-Path $basePath "$key"
+            if (Test-Path $privFile) {
+                $vmPrivKeys += $privFile
+            } else {
+                Write-Error "Could not find private key $key"
+                exit 1
+            }
+        } else {
+            $vmPrivKeys += $privFile
+        }
+    }
+
+    if ($vmPubKeys.Length -eq 0) {
+        Write-Error "No inter-node SSH keys found"
+        exit 1
+    }
+
+    $primaryPubKey = Get-Content -Path $vmPubKeys[0] -Raw
+    $primaryPrivKey = Get-Content -Path $vmPrivKeys[0] -Raw
+
+    Write-Host "  Public Key: $($vmPubKeys[0])"
+    Write-Host "  Private Key: $($vmPrivKeys[0])"
+
+    # Get VMSS instance IDs and computer names
+    $instancesJson = az vmss list-instances `
+        --resource-group $rg `
+        --name $VmssName `
+        --query '[].{id:instanceId, name:osProfile.computerName}' -o json 2>$null | ConvertFrom-Json
+
+    if (-not $instancesJson -or $instancesJson.Count -eq 0) {
+        Write-Error "No VMSS instances found for $VmssName in $rg."
+        exit 1
+    }
+
+    # Push keys via run-command (use base64 to avoid quoting issues)
+    $pubKeyB64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($primaryPubKey))
+    $privKeyB64 =  [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($primaryPrivKey))
+    $script = "echo '$pubKeyB64' | base64 -d > /home/$SshUser/.ssh/id_rsa.pub "
+    $script += "&& echo '$privKeyB64' | base64 -d > /home/$SshUser/.ssh/id_rsa "
+    $script += "&& chmod 600 /home/$SshUser/.ssh/id_rsa && chown $SshUser`:$SshUser /home/$SshUser/.ssh/id_rsa"
+    $script += "&& chmod 600 /home/$SshUser/.ssh/id_rsa && chown $SshUser`:$SshUser /home/$SshUser/.ssh/id_rsa"
+
+    foreach ($instance in $instancesJson) {
+        Write-Host "  Updating $($instance.name) (instance $($instance.id))..." -NoNewline
+        az vmss run-command invoke `
+            --resource-group $rg `
+            --name $VmssName `
+            --instance-id $instance.id `
+            --command-id RunShellScript `
+            --scripts $script `
+            --output none 2>$null
+
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host " OK" -ForegroundColor Green
+        } else {
+            Write-Host " FAILED" -ForegroundColor Red
+        }
+    }
+
+    Write-Host "`n=== SSH keys set ===" -ForegroundColor Green
+}
+
 switch ($Action) {
     'deploy' {
         # Copy .pub files from BasePath to security/
@@ -365,6 +450,8 @@ switch ($Action) {
         }
         $params | ConvertTo-Json -Depth 5 | Set-Content -Path $vmssParamsFile -Encoding utf8
         Write-Host "  Updated $vmssParamsFile with keyVaultName=$discoveredKv" -ForegroundColor Green
+
+        Set-NodeSSHKey
     }
 
     'update' {
@@ -433,5 +520,11 @@ switch ($Action) {
         }
 
         Write-Host "`n=== Key update complete ===" -ForegroundColor Green
+
+        Set-NodeSSHKey
+    }
+
+    'ssh' {
+        Set-NodeSSHKey
     }
 }
