@@ -506,7 +506,7 @@ function Invoke-ParallelMcluster {
             Write-Host " dispatched" -ForegroundColor Green
         } else {
             Write-Host "  [$ip] (ssh) ..." -NoNewline
-            Invoke-Ssh -Ip $ip -SshUser $SshUser -Command "~/AzureBench/node/cluster/mcluster.ps1 $MclusterArgs" -Background | Out-Null
+            Invoke-Ssh -Ip $ip -SshUser $SshUser -Command "pwsh -File ~/AzureBench/node/cluster/mcluster.ps1 $MclusterArgs" -Background | Out-Null
             Write-Host " dispatched" -ForegroundColor Green
         }
     }
