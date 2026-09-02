@@ -754,7 +754,10 @@ function Resolve-Peers {
 
     # Discovery mode if no cache
     if (-not $peers) {
-        foreach($eth in Get-EthInterfaces)
+        $ethInterfaces = Get-EthInterfaces | Where-Object { $_ -ne "eth1"}
+        $ethInterfaces = @("eth1") + $ethInterfaces
+
+        foreach($eth in $ethInterfaces)
         {
             Write-Host "Considering $eth" -ForegroundColor Yellow
             $ethInfo = Get-OwnEthInfo $eth
