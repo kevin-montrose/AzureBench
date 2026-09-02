@@ -4,10 +4,7 @@
       "name": "garnet",
       "url": "https://github.com/microsoft/garnet.git",
       "path": "/home/guser/garnet",
-      "branch": [
-        "vazois/mlog-updates",
-        "vazois/cluster-bench"
-      ]
+      "branch": "main"
     },
     {
       "name": "valkey",

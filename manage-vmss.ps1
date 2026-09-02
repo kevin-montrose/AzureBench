@@ -67,6 +67,7 @@
 #>
 
 param(
+    [Alias("ResourceGroup")]
     [string]$rg,
 
     [string]$VmssName,
@@ -763,13 +764,13 @@ function Get-SshCommand {
                 # Fetch + hard-reset to an explicit commit/tag/branch, then build the
                 # checked-out tree (build.sh gets no branch arg so it won't re-checkout).
                 $pull = Get-GitPull -ref $Ref
-                return "$dnsWarmup; cd $repoPath && echo '[git checkout $Ref]' && $pull && echo '[build]' && sudo /opt/deploy-actions/build.sh $buildArgs"
+                return "$dnsWarmup; mkdir -p $repoPath && cd $repoPath && echo '[git checkout $Ref]' && $pull && echo '[build]' && sudo /opt/deploy-actions/build.sh $buildArgs"
             }
             if ($NoPull) {
                 return "cd $repoPath && echo '[build (no pull)]' && sudo /opt/deploy-actions/build.sh $buildArgs"
             }
             $pull = Get-GitPull -branch $buildBranch
-            return "$dnsWarmup; cd $repoPath && echo '[git pull]' && $pull && echo '[build]' && sudo /opt/deploy-actions/build.sh $buildArgs"
+            return "$dnsWarmup; mkdir -p $repoPath && cd $repoPath && echo '[git pull]' && $pull && echo '[build]' && sudo /opt/deploy-actions/build.sh $buildArgs"
         }
 
         'deploy' {
@@ -882,6 +883,7 @@ foreach ($vmss in $targetVmss) {
         $results | Where-Object { -not $_.Success } | ForEach-Object {
             $label = if ($_.FQDN) { $_.FQDN } else { $_.Instance }
             Write-Host "    $label ($($_.IP)) [$($_.Duration)]" -ForegroundColor Red
+            Write-Host "        $($_.Output)" -ForegroundColor Red
         }
     }
 
