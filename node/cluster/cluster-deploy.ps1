@@ -662,7 +662,7 @@ function New-Cluster {
     $mode = if ($Manual) { "MANUAL" } else { "auto" }
     Write-Host "Forming cluster [$mode] ($($Endpoints.Count) nodes, $ReplicaCount replica(s) per primary)..." -ForegroundColor Yellow
 
-    $cli = if ($Sys -eq "valkey") { "valkey-cli" } else { "redis-cli" }
+    $cli = if ($Sys -eq "valkey") { "valkey-cli" } else { "redis-cli --tls --insecure" }
 
     if ($Manual) {
         New-ClusterManual -Endpoints $Endpoints -ReplicaCount $ReplicaCount -Cli $cli

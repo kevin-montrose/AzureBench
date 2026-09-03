@@ -344,11 +344,11 @@ function Set-TLSCert {
         exit 1
     }
 
-    $cert = Get-Content -Path $certPath -Raw
+    $cert = Get-Content -Path $certPath -AsByteStream
 
     # Push keys via run-command (use base64 to avoid quoting issues)
-    $certB64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($cert))
-    $script = "mkdir -p /var/lib/garnet && echo '$certB64' | base64 -d > /home/$SshUser/.ssh/id_rsa.pub"
+    $certB64 = [Convert]::ToBase64String($cert)
+    $script = "mkdir -p /var/lib/garnet && echo '$certB64' | base64 -d > /var/lib/garnet/certificate.pfx"
 
     foreach ($instance in $instancesJson) {
         Write-Host "  Updating $($instance.name) (instance $($instance.id))..." -NoNewline

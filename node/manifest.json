@@ -159,7 +159,7 @@
     {
       "run": "build.sh",
       "sudo": true,
-      "args": "valkey"
+      "args": "valkey tls"
     },
     {
       "run": "build.sh",
