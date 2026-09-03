@@ -12,6 +12,7 @@
     sync             - Discovers existing Key Vault in the resource group and updates vmss-parameters.json + manifest.json
     update           - Pushes keys to running VMSS nodes via az vmss run-command
     ssh              - Add SSH keys to VMSS nodes
+    cert             - Copy any .pfx in upload a certificate for Garnet TLS (stored in /var/lib/garnet/certificate.pfx)
 
 .PARAMETER rg
     Azure resource group name.
@@ -40,7 +41,7 @@
 #>
 
 param(
-    [ValidateSet('deploy', 'vault', 'sync', 'update', 'ssh')]
+    [ValidateSet('deploy', 'vault', 'sync', 'update', 'ssh', 'cert')]
     [string]$Action = 'deploy',
 
     [Alias('ResourceGroup')]
@@ -322,6 +323,53 @@ function Set-NodeSSHKey {
     Write-Host "`n=== SSH keys set ===" -ForegroundColor Green
 }
 
+function Set-TLSCert {
+    Write-Host "=== Adding TLS certificate for nodes: $VmssName ===" -ForegroundColor Cyan
+
+    $certPath = Join-Path $securityDir "certificate.pfx"
+
+    if (-not (Test-Path $certPath)) {
+        Write-Host "  No certificate in $securityDir, skipping" -ForegroundColor Yellow
+        return
+    }
+    
+    # Get VMSS instance IDs and computer names
+    $instancesJson = az vmss list-instances `
+        --resource-group $rg `
+        --name $VmssName `
+        --query '[].{id:instanceId, name:osProfile.computerName}' -o json 2>$null | ConvertFrom-Json
+
+    if (-not $instancesJson -or $instancesJson.Count -eq 0) {
+        Write-Error "No VMSS instances found for $VmssName in $rg."
+        exit 1
+    }
+
+    $cert = GetContent -Path $certPath -Raw
+
+    # Push keys via run-command (use base64 to avoid quoting issues)
+    $certB64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($cert))
+    $script = "mkdir -p /var/lib/garnet && echo '$certB64' | base64 -d > /home/$SshUser/.ssh/id_rsa.pub"
+
+    foreach ($instance in $instancesJson) {
+        Write-Host "  Updating $($instance.name) (instance $($instance.id))..." -NoNewline
+        az vmss run-command invoke `
+            --resource-group $rg `
+            --name $VmssName `
+            --instance-id $instance.id `
+            --command-id RunShellScript `
+            --scripts $script `
+            --output none 2>$null
+
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host " OK" -ForegroundColor Green
+        } else {
+            Write-Host " FAILED" -ForegroundColor Red
+        }
+    }
+
+    Write-Host "`n=== SSH keys set ===" -ForegroundColor Green
+}
+
 switch ($Action) {
     'deploy' {
         # Copy .pub files from BasePath to security/
@@ -343,6 +391,18 @@ switch ($Action) {
         if (Test-Path $vmKeyPubSrc) {
             Copy-Item $vmKeyPubSrc $vmKeyPubDst -Force
             Write-Host "  Copied: $($manifest.vmKeys).pub"
+        }
+
+        # copy cert files, if any
+        if ($manifest.cert) {
+            $src = Join-Path $basePath $manifest.cert
+            $dst = Join-Path $securityDir "certificate.pfx"
+            if (-not (Test-Path $src)) {
+                Write-Warning "Key not found: $src (skipping)"
+                continue
+            }
+            Copy-Item $src $dst -Force
+            Write-Host "  Copied: $($manifest.cert)"
         }
 
         # Collect all public key contents
@@ -452,6 +512,7 @@ switch ($Action) {
         Write-Host "  Updated $vmssParamsFile with keyVaultName=$discoveredKv" -ForegroundColor Green
 
         Set-NodeSSHKey
+        Set-TLSCert
     }
 
     'update' {
@@ -522,9 +583,14 @@ switch ($Action) {
         Write-Host "`n=== Key update complete ===" -ForegroundColor Green
 
         Set-NodeSSHKey
+        Set-TLSCert
     }
 
     'ssh' {
         Set-NodeSSHKey
+    }
+
+    'cert' {
+        Set-TLSCert
     }
 }
