@@ -344,7 +344,7 @@ function Set-TLSCert {
         exit 1
     }
 
-    $cert = GetContent -Path $certPath -Raw
+    $cert = Get-Content -Path $certPath -Raw
 
     # Push keys via run-command (use base64 to avoid quoting issues)
     $certB64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($cert))

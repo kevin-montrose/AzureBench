@@ -5,6 +5,6 @@
     "id_ed25519_notebook"
   ],
   "vmKeys": "id_ed25519_vmss",
-  "keyVaultName": "kv-20260901172342",
-  "cert": "garnet.pfx"
+  "cert": "AzureBench.pfx",
+  "keyVaultName": "kv-20260901172342"
 }
