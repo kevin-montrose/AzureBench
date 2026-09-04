@@ -182,4 +182,8 @@ EOF
 sudo sysctl -w fs.nr_open=1048576
 sudo sysctl -w fs.file-max=2097152
 
+# 6. Enable KTLS by loading the module
+sudo modprobe tls
+echo "tls" | sudo tee -a /etc/modules
+
 echo "Network setup complete ($ENGINE mode, $NODES nodes): RSS/IRQ, routing, iptables, TCP tuning, fd limits."
