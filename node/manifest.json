@@ -4,7 +4,7 @@
       "name": "garnet",
       "url": "https://github.com/microsoft/garnet.git",
       "path": "/home/guser/garnet",
-      "branch": "main"
+      "branch": "users/kmontrose/socketSet"
     },
     {
       "name": "valkey",
