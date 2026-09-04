@@ -212,8 +212,8 @@ if ($extraArgs) {
 $probeOpts = @('-n', '-o', 'ConnectTimeout=10', '-o', 'StrictHostKeyChecking=no', '-o', 'BatchMode=yes')
 $probeHost = $sshHosts | Select-Object -First 1
 Write-Host "Probing server info (${benchHost}:${benchPort})..." -ForegroundColor DarkGray
-$serverInfoRaw = ssh -i $sshKey @probeOpts "${sshUser}@${probeHost}" "redis-cli -h $benchHost -p $benchPort info server 2>/dev/null" 2>&1
-$serverReplRaw = ssh -i $sshKey @probeOpts "${sshUser}@${probeHost}" "redis-cli -h $benchHost -p $benchPort info replication 2>/dev/null" 2>&1
+$serverInfoRaw = ssh -i $sshKey @probeOpts "${sshUser}@${probeHost}" "redis-cli --tls --insecure -h $benchHost -p $benchPort info server 2>/dev/null" 2>&1
+$serverReplRaw = ssh -i $sshKey @probeOpts "${sshUser}@${probeHost}" "redis-cli --tls --insecure -h $benchHost -p $benchPort info replication 2>/dev/null" 2>&1
 $serverCpuRaw = ssh -i $sshKey @probeOpts "${sshUser}@${probeHost}" "ssh -o StrictHostKeyChecking=no ${sshUser}@${benchHost} nproc 2>/dev/null" 2>&1
 $serverCpuCount = ($serverCpuRaw | ForEach-Object { "$_".Trim() } | Where-Object { $_ -match '^\d+$' } | Select-Object -Last 1)
 
@@ -505,7 +505,7 @@ $dbSizeTotal = 0
 $shardResults = @()
 
 if ($clusterBench -eq "true") {
-    $clusterNodesRaw = ssh -i $sshKey @probeOpts "${sshUser}@${probeHost}" "redis-cli -h $benchHost -p $benchPort cluster nodes 2>/dev/null" 2>&1
+    $clusterNodesRaw = ssh -i $sshKey @probeOpts "${sshUser}@${probeHost}" "redis-cli --tls --insecure -h $benchHost -p $benchPort cluster nodes 2>/dev/null" 2>&1
     $shardEndpoints = @()
     foreach ($line in $clusterNodesRaw) {
         $lineStr = "$line".Trim()
@@ -521,7 +521,7 @@ if ($clusterBench -eq "true") {
 
 if ($shardEndpoints.Count -gt 0) {
     $dbSizeCmds = ($shardEndpoints | ForEach-Object {
-        "echo `"SHARD $($_.Host):$($_.Port)`" && redis-cli -h $($_.Host) -p $($_.Port) dbsize 2>/dev/null"
+        "echo `"SHARD $($_.Host):$($_.Port)`" && redis-cli --tls --insecure -h $($_.Host) -p $($_.Port) dbsize 2>/dev/null"
     }) -join " && "
     $dbSizeRaw = ssh -i $sshKey @probeOpts "${sshUser}@${probeHost}" "$dbSizeCmds" 2>&1
 
