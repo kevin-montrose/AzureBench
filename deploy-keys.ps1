@@ -367,7 +367,7 @@ function Set-TLSCert {
         }
     }
 
-    Write-Host "`n=== SSH keys set ===" -ForegroundColor Green
+    Write-Host "`n=== TLS certificate added ===" -ForegroundColor Green
 }
 
 switch ($Action) {

@@ -678,7 +678,7 @@ function New-Cluster {
     $firstEp = $Endpoints[0] -split ':'
     Write-Host ""
     Write-Host "Verifying cluster state..." -ForegroundColor Yellow
-    $verifyCmd = if ($Sys -eq "valkey") { "valkey-cli" } else { "redis-cli" }
+    $verifyCmd = if ($Sys -eq "valkey") { "valkey-cli" } else { "redis-cli --tls --insecure" }
     $clusterInfo = bash -c "$verifyCmd -h $($firstEp[0]) -p $($firstEp[1]) CLUSTER INFO" 2>&1
     $stateLine = $clusterInfo | Where-Object { $_ -match "cluster_state" }
     $slotsLine = $clusterInfo | Where-Object { $_ -match "cluster_slots_ok" }
