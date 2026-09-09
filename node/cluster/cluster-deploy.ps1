@@ -762,7 +762,7 @@ function Resolve-Peers {
             Write-Host "Considering $eth" -ForegroundColor Yellow
             $ethInfo = Get-OwnEthInfo $eth
             $peers = Find-Peers -OwnIp $ethInfo.Ip -Prefix $ethInfo.Prefix -SshUser $User -Timeout $SshTimeout -MaxScan $MaxScan
-            if($peers -And $peers.Count -gt 1)
+            if ($peers -And $peers.Count -gt 0)
             {
                 Save-PeerCache -Ips $peers -OwnIp $ethInfo.Ip
                 Test-VmssFamily -Ips $peers -SshUser $User -Timeout $SshTimeout
@@ -771,7 +771,7 @@ function Resolve-Peers {
             }
         }
 
-        if(-not ($peers -And $peers.Count -gt 1)) {
+        if (-not ($peers -And $peers.Count -gt 0)) {
             throw "ERROR: Could not discover peers on any ethernet interface."
         }
     }
